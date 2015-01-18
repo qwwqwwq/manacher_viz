@@ -1,0 +1,66 @@
+.label-major {
+    font: 16px sans-serif;
+}
+
+.label-minor {
+    font: 13px sans-serif;
+}
+
+.axis line,
+.axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+    stroke-width: 1.5px;
+}
+
+.axis .micro {
+    stroke: #aaa;
+    stroke-width: 0.5px;
+}
+
+.axis .minor {
+    stroke: #666;
+    stroke-width: 1px;
+}
+
+.axis .major {
+    stroke-width: 2px;
+}
+
+.main {
+    font: bold 64px monospace;
+    text-anchor: middle;
+}
+
+.side {
+    font: bold 58px monospace;
+    text-anchor: start;
+}
+
+.full-button {
+    width: 100%;
+}
+
+.r {
+    fill: #b92c28;
+    stroke: #b92c28;
+}
+
+.c {
+    fill: #eb9316;
+    stroke: #eb9316;
+}
+
+.match {
+    fill: rgba(156, 239, 140, 0.51);
+    stroke: rgba(156, 239, 140, 0.51);
+}
+.mismatch {
+    fill: rgba(255, 14, 0, 0.49);
+    stroke: rgba(255, 14, 0, 0.49);
+}
+.hilight {
+    fill: #e6ef86;
+    stroke: #e6ef86;
+}

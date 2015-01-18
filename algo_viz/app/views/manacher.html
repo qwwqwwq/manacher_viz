@@ -1,0 +1,21 @@
+<div ng-controller="ManacherController">
+    <div class="container">
+        <div class="row">
+            <h1 class="bg-info">Manacher's Longest Palindromic Substring Algorithm</h1>
+        </div>
+        <div class="row">
+            <manacher_directive binding="string" />
+        </div>
+        <div class="row">
+            <form>
+                <div class="form-group">
+                    <label for="inputString">Input String</label>
+                    <input ng-model="string"
+                           class="form-control"
+                           id="inputString"
+                           placeholder="Enter input string" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
