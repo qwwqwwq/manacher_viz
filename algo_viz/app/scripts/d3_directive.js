@@ -258,22 +258,22 @@ angular.module('d3Directives').directive(
                         console.log([start,end]);
                         var halfX = (o(1) - o(0)) / 2;
                         var halfY = (y(1) - y(0)) / 2;
-                        var r = radiusFromSagitta(halfY, (o(end) - o(start)));
+                        var r = radiusFromSagitta(halfY, (o(end) - o(start))/2);
                         var a = angleFromSagitta(halfY, r);
                         console.log("r: " + r);
                         console.log("a: " + a);
                         var arc = d3.svg.arc()
                             .innerRadius(r)
                             .outerRadius(r + 2)
-                            .startAngle(a + Math.PI)
-                            .endAngle(a);
+                            .startAngle(Math.PI + (a/2))
+                            .endAngle(Math.PI - (a/2));
 
                         svg.selectAll("path." + klazz).remove();
                         svg.append("path")
                             .attr("class", klazz)
                             .attr("d", arc)
                             .attr("transform", function() {
-                                return "translate(" + (o(end)+o(start))/2 + "," + (y(0)+y(1))/2 + ")";
+                                return "translate(" + (o(end)+o(start))/2 + "," + (y(1)-r) + ")";
                             });
 
 
