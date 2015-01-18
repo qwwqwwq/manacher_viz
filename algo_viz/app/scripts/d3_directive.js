@@ -254,14 +254,24 @@ angular.module('d3Directives').directive(
                         return $timeout(function() {}, 500);
                     }
 
+                    function bracket (start, end, depth) {
+                        //The data for our line
+                        var lineData = [ { "x": start[0],   "y": start[1]},  { "x": start[0],  "y": start[1]+depth},
+                                         { "x": end[0],  "y": end[1]+depth}, { "x": end[0],  "y": end[1]}];
+
+                        //This is the accessor function we talked about above
+                        var lineFunction = d3.svg.line()
+                                                 .x(function(d) { return d.x; })
+                                                 .y(function(d) { return d.y; })
+                                                 .interpolate("linear");
+                        return lineFunction(lineData);
+                    }
+
                     function arcUpdateCB(start, end, klazz) {
-                        console.log([start,end]);
                         var halfX = (o(1) - o(0)) / 2;
                         var halfY = (y(1) - y(0)) / 2;
                         var r = radiusFromSagitta(halfY, (o(end) - o(start))/2);
                         var a = angleFromSagitta(halfY, r);
-                        console.log("r: " + r);
-                        console.log("a: " + a);
                         var arc = d3.svg.arc()
                             .innerRadius(r)
                             .outerRadius(r + 2)
@@ -288,11 +298,26 @@ angular.module('d3Directives').directive(
                             .attr("width", halfX*2)
                             .attr("height", halfY*2);
 
+
+
+                        if (klazz === "match") {
+                            var mid = (y(0) + y(1)) / 2;
+                            var b = bracket([o(start) - halfX, mid],
+                                [(o(end) + halfX), mid],
+                                10);
+                            svg.selectAll("path.bracket").remove();
+                            svg.append("path")
+                                .attr("d", b)
+                                .attr("class", "bracket");
+                        }
+
                         return $timeout(function() {
                             svg.selectAll("path." + klazz).remove();
                             svg.selectAll("rect." + klazz).remove();
                         }, 500);
                     }
+
+
 
                     svg.selectAll("*").remove();
                     manacher.longestPalindrome(newString, iUpdateCB, tUpdateCB, pUpdateCB, rUpdateCB, cUpdateCB, arcUpdateCB);

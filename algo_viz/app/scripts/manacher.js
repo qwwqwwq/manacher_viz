@@ -59,6 +59,8 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', function ($ti
 
             if (R > i) {
                 P[i] = Math.min(R - i, P[i_mirror]);
+            } else {
+                //something
             }
 
             promises.push(

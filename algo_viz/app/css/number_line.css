@@ -64,3 +64,9 @@
     fill: #e6ef86;
     stroke: #e6ef86;
 }
+
+.bracket {
+    fill: none;
+    stroke: black;
+    stroke-width: 5px;
+}
