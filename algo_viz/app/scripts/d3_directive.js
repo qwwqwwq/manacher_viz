@@ -270,8 +270,9 @@ angular.module('d3Directives').directive(
                     function arcUpdateCB(start, end, klazz) {
                         var halfX = (o(1) - o(0)) / 2;
                         var halfY = (y(1) - y(0)) / 2;
-                        var r = radiusFromSagitta(halfY, (o(end) - o(start))/2);
-                        var a = angleFromSagitta(halfY, r);
+                        var quarterY = (y(1) - y(0)) / 4;
+                        var r = radiusFromSagitta(quarterY, (o(end) - o(start))/2);
+                        var a = angleFromSagitta(quarterY, r);
                         var arc = d3.svg.arc()
                             .innerRadius(r)
                             .outerRadius(r + 2)
@@ -283,7 +284,7 @@ angular.module('d3Directives').directive(
                             .attr("class", klazz)
                             .attr("d", arc)
                             .attr("transform", function() {
-                                return "translate(" + (o(end)+o(start))/2 + "," + (y(1)-r) + ")";
+                                return "translate(" + (o(end)+o(start))/2 + "," + (y(0)+halfY+quarterY-r) + ")";
                             });
 
 
@@ -317,10 +318,13 @@ angular.module('d3Directives').directive(
                         }, 500);
                     }
 
+                    function rpUpdateCB (iMirror, i, rMinusI, pIMirror) {
+
+                    }
 
 
                     svg.selectAll("*").remove();
-                    manacher.longestPalindrome(newString, iUpdateCB, tUpdateCB, pUpdateCB, rUpdateCB, cUpdateCB, arcUpdateCB);
+                    manacher.longestPalindrome(newString, iUpdateCB, tUpdateCB, pUpdateCB, rUpdateCB, cUpdateCB, arcUpdateCB, rpUpdateCB);
                 };
 
                 scope.$watch(attrs.binding, function (newVals, oldVals) {
