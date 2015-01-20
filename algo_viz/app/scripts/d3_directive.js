@@ -1,9 +1,5 @@
 'use strict';
 
-function range(x) {
-    return Array.apply(null, new Array(x)).map(function (_, i) {return i; });
-}
-
 function radiusFromSagitta (s, L) {
     return ((s * s) + (L * L)) / (2 * s);
 }
@@ -25,15 +21,23 @@ angular.module('d3Directives').directive(
                     triangleArea = 1000,
                     sidePanelWidth = 300,
                     sidePanelMargin = 30,
-                    svg;
+                    timestep = 500, // time spent rendering each algoritm step
+                    svg,
+                    trow = 0,
+                    prow = 1,
+                    irow = 2,
+                    crow = 3,
+                    rrow = 4;
 
                 function initalizeSvg() {
                     d3.select("svg").remove();
-                    return d3.select("manacher_directive").append("svg")
+                    var svg = d3.select("manacher_directive").append("svg")
                         .attr("width", width)
                         .attr("height", height)
                         .append("g");
+                    return svg;
                 }
+
                 function getMainExtent() {
                     return [mainMargin, width - (mainMargin + sidePanelWidth)];
                 }
@@ -54,22 +58,22 @@ angular.module('d3Directives').directive(
                     var o, y, sidePanelX;
 
                     o = d3.scale.ordinal()
-                        .domain(range(newStringChars.length))
-                        .rangePoints(getMainExtent());
+                        .domain(d3.range(newStringChars.length))
+                        .rangeBands(getMainExtent());
 
                     sidePanelX = d3.scale.ordinal()
-                        .domain(range(3))
-                        .rangePoints(getSidePanelExtent());
+                        .domain(d3.range(3))
+                        .rangeBands(getSidePanelExtent());
 
                     y = d3.scale.ordinal()
-                        .domain(range(5))
-                        .rangePoints(getVerticalExtent());
+                        .domain(d3.range(5))
+                        .rangeBands(getVerticalExtent());
 
 
                     function tUpdateCB(oldT, newT) {
                         o = d3.scale.ordinal()
-                            .domain(range(newT.length))
-                            .rangePoints(getMainExtent());
+                            .domain(d3.range(newT.length))
+                            .rangeBands(getMainExtent());
 
                         svg.selectAll("text.t").remove();
 
@@ -82,7 +86,7 @@ angular.module('d3Directives').directive(
                                 return o(i);
                             })
                             .attr("y", function (d, i) {
-                                return y(0);
+                                return y(trow);
                             })
                             .attr("dy", ".35em")
                             .text(function (d) {
@@ -103,8 +107,8 @@ angular.module('d3Directives').directive(
                         }
                         console.log(diffs);
                         o = d3.scale.ordinal()
-                            .domain(range(newP.length))
-                            .rangePoints(getMainExtent());
+                            .domain(d3.range(newP.length))
+                            .rangeBands(getMainExtent());
                         svg.selectAll("text.p").remove();
 
                         svg.selectAll("text.p")
@@ -139,119 +143,63 @@ angular.module('d3Directives').directive(
                                 return o(d);
                             })
                             .attr("y", function (d, i) {
-                                return y(1);
+                                return y(prow);
                             })
                             .text(function(d,i) {
                                 return "+" + String(magnitudes[i]);
                             })
                             .transition()
-                            .duration(500)
+                            .duration(timestep)
                             .attr("x", function (d) {
                                 return o(d);
                             })
                             .attr("y", function (d, i) {
-                                return y(0);
+                                return y(trow);
                             })
                             .style('opacity', 0);
 
                         return $timeout(function() {
                             svg.selectAll("text.pchange").remove();
-                        }, 500);
+                        }, timestep);
                     }
 
-
-                    function iUpdateCB(oldPos, newPos) {
-                        svg.selectAll("path.i").remove();
-
-                        svg.append("path")
-                            .attr("d", d3.svg.symbol().type("triangle-up").size(triangleArea))
-                            .attr("transform", function(d) { return "translate(" + (o(oldPos)) + "," + y(2) + ")"; })
-                            .attr("class", "i")
-                            .transition()
-                            .attr("transform", function(d) { return "translate(" + (o(newPos)) + "," + y(2) + ")"; })
-                            .duration(500);
-
-                        svg.selectAll("text.i").remove();
-                        svg.selectAll("text.i")
-                            .data(["i=", String(newPos)])
-                            .enter()
-                            .append("text")
-                            .attr("class", "side i")
-                            .attr("x", function (d, i) {
-                                return sidePanelX(i);
-                            })
-                            .attr("y", function (d, i) {
-                                return y(2);
-                            })
-                            .attr("dy", ".35em")
-                            .text(function (d) {
-                                return String(d);
-                            });
-
-                        return $timeout(function() {}, 500);
+                    function translate (x, y) {
+                        return "translate(" + x + "," + y + ")";
                     }
 
-                    function cUpdateCB(oldPos, newPos) {
-                        svg.selectAll("path.c").remove();
+                    function tickUpdateCBFactory(klazz, row) {
+                        return function (oldPos, newPos) {
+                            svg.selectAll("path." + klazz).remove();
 
-                        svg.append("path")
-                            .attr("d", d3.svg.symbol().type("triangle-up").size(triangleArea))
-                            .attr("transform", function(d) { return "translate(" + (o(oldPos)) + "," + y(3) + ")"; })
-                            .attr("class", "c")
-                            .transition()
-                            .attr("transform", function(d) { return "translate(" + (o(newPos)) + "," + y(3) + ")"; })
-                            .duration(500);
+                            svg.append("path")
+                                .attr("d", d3.svg.symbol().type("triangle-up").size(triangleArea))
+                                .attr("transform", function () {
+                                    return translate(o(oldPos), y(row));
+                                })
+                                .attr("class", klazz)
+                                .transition()
+                                .attr("transform", function () {
+                                    return translate(o(newPos), y(row));
+                                })
+                                .duration(timestep);
 
-                        svg.selectAll("text.c").remove();
-                        svg.selectAll("text.c")
-                            .data(["c=", String(newPos)])
-                            .enter()
-                            .append("text")
-                            .attr("class", "side c")
-                            .attr("x", function (d, i) {
-                                return sidePanelX(i);
-                            })
-                            .attr("y", function (d, i) {
-                                return y(3);
-                            })
-                            .attr("dy", ".35em")
-                            .text(function (d) {
-                                return String(d);
-                            });
-
-
-                        return $timeout(function() {}, 500);
-                    }
-
-                    function rUpdateCB(oldPos, newPos) {
-                        svg.selectAll("path.r").remove();
-
-                        svg.append("path")
-                            .attr("d", d3.svg.symbol().type("triangle-up").size(triangleArea))
-                            .attr("transform", function(d) { return "translate(" + (o(oldPos)) + "," + y(4) + ")"; })
-                            .attr("class", "r")
-                            .transition()
-                            .attr("transform", function(d) { return "translate(" + (o(newPos)) + "," + y(4) + ")"; })
-                            .duration(500);
-
-                        svg.selectAll("text.r").remove();
-                        svg.selectAll("text.r")
-                            .data(["r=", String(newPos)])
-                            .enter()
-                            .append("text")
-                            .attr("class", "side r")
-                            .attr("x", function (d, i) {
-                                return sidePanelX(i);
-                            })
-                            .attr("y", function (d, i) {
-                                return y(4);
-                            })
-                            .attr("dy", ".35em")
-                            .text(function (d) {
-                                return String(d);
-                            });
-
-                        return $timeout(function() {}, 500);
+                            svg.selectAll("text." + klazz).remove();
+                            svg.selectAll("text." + klazz)
+                                .data([klazz+"=", String(newPos)])
+                                .enter()
+                                .append("text")
+                                .attr("class", "side " + klazz)
+                                .attr("x", function (d, i) {
+                                    return sidePanelX(i);
+                                })
+                                .attr("y", function () {
+                                    return y(row);
+                                })
+                                .attr("dy", ".35em")
+                                .text(function (d) {
+                                    return String(d);
+                                });
+                        };
                     }
 
                     function bracket (start, end, depth) {
@@ -267,40 +215,112 @@ angular.module('d3Directives').directive(
                         return lineFunction(lineData);
                     }
 
+                    function arrowMarker (id, klazz, reverse) {
+                        var path, viewBox;
+                        if (reverse) {
+                            viewBox = "-10 -5 10 10";
+                            path = "M-10,-5L0,0L-10,5";
+                        } else {
+                            viewBox = "0 -5 10 10";
+                            path = "M10,-5L0,0L10,5";
+                        }
+                        svg.append("defs").append("marker")
+                            .attr("id", id)
+                            .attr("viewBox", viewBox)
+                            .attr("refX", 0)
+                            .attr("refY", 0)
+                            .attr("markerWidth", 6)
+                            .attr("markerHeight", 6)
+                            .attr("orient", "auto")
+                            .attr("class", klazz)
+                            .append("path")
+                            .attr("d", path);
+                    }
+
+                    function arrowLine (start, end, klazz, leftArrow, rightArrow) {
+                        var points = 50;
+                        if (leftArrow) {
+                            arrowMarker("leftarrow", klazz, true);
+                            $timeout(function() {svg.selectAll("#leftarrow").remove(); }, timestep);
+                        }
+                        if (rightArrow) {
+                            arrowMarker("rightarrow", klazz, true);
+                            $timeout(function() {svg.selectAll("#rightarrow").remove(); }, timestep);
+                        }
+                        var r = radiusFromSagitta(quarterY, (o(end) - o(start))/2);
+                        var a = angleFromSagitta(quarterY, r);
+
+                        var angle = d3.scale.linear()
+                            .domain([0,points-1])
+                            .range([Math.PI - (a/2), Math.PI + (a/2)]);
+
+                        var line = d3.svg.line.radial()
+                            .interpolate("basis")
+                            .tension(0)
+                            .radius(r)
+                            .angle(function(d, i) { return angle(i); });
+
+                        svg.selectAll("path." + klazz).remove();
+                        var radial = svg.append("path")
+                            .datum(d3.range(points))
+                            .attr("class", klazz + "line")
+                            .attr("d", line);
+
+                        if (leftArrow) {
+                            radial = radial.attr("marker-end", "url(#arrowheadrev)");
+                        }
+
+                        if (rightArrow) {
+                            radial = radial attr("marker-start", "url(#arrowheadrev)");
+                        };
+
+                        radial.attr("transform", function() {
+                                return "translate(" + (o(end)+o(start))/2 + "," + (y(0)+halfY+quarterY-r) + ")";
+                            });
+
+
+
+                    }
+
                     function arcUpdateCB(start, end, klazz) {
+
                         var halfX = (o(1) - o(0)) / 2;
                         var halfY = (y(1) - y(0)) / 2;
                         var quarterY = (y(1) - y(0)) / 4;
                         var r = radiusFromSagitta(quarterY, (o(end) - o(start))/2);
                         var a = angleFromSagitta(quarterY, r);
-                        var arc = d3.svg.arc()
-                            .innerRadius(r)
-                            .outerRadius(r + 2)
-                            .startAngle(Math.PI + (a/2))
-                            .endAngle(Math.PI - (a/2));
+                        var points = 50;
+                        var angle = d3.scale.linear()
+                            .domain([0,points-1])
+                            .range([Math.PI - (a/2), Math.PI + (a/2)]);
+
+                        var line = d3.svg.line.radial()
+                            .interpolate("basis")
+                            .tension(0)
+                            .radius(r)
+                            .angle(function(d, i) { return angle(i); });
 
                         svg.selectAll("path." + klazz).remove();
                         svg.append("path")
-                            .attr("class", klazz)
-                            .attr("d", arc)
+                            .datum(d3.range(points))
+                            .attr("class", klazz + "line")
+                            .attr("d", line)
+                            .attr("marker-end", "url(#arrowhead)")
+                            .attr("marker-start", "url(#arrowheadrev)")
                             .attr("transform", function() {
                                 return "translate(" + (o(end)+o(start))/2 + "," + (y(0)+halfY+quarterY-r) + ")";
                             });
-
 
                         svg.selectAll("rect." + klazz).remove();
                         svg.selectAll("rect." + klazz)
                             .data([start,end])
                             .enter()
                             .append("rect")
-                            .attr("class", klazz)
+                            .attr("class", klazz + "rect")
                             .attr("x", function(d) { return o(d) - halfX; })
                             .attr("y", y(0) - halfY)
                             .attr("width", halfX*2)
                             .attr("height", halfY*2);
-
-
-
                         if (klazz === "match") {
                             var mid = (y(0) + y(1)) / 2;
                             var b = bracket([o(start) - halfX, mid],
@@ -313,18 +333,67 @@ angular.module('d3Directives').directive(
                         }
 
                         return $timeout(function() {
-                            svg.selectAll("path." + klazz).remove();
-                            svg.selectAll("rect." + klazz).remove();
+                            svg.selectAll("path." + klazz + "line").remove();
+                            svg.selectAll("rect." + klazz + "rect").remove();
                         }, 500);
                     }
 
-                    function rpUpdateCB (iMirror, i, rMinusI, pIMirror) {
+                    function rpUpdateCB (iMirror, I, rMinusI, pIMirror) {
+                        var klazz = "carry";
+                        svg.selectAll("#carryarrowhead").remove();
+                        // define the arrowhead shape for later use
+                        svg.append("defs").append("marker")
+                            .attr("id", "carryarrowhead")
+                            .attr("viewBox", "-10 -5 10 10")
+                            .attr("refX", 0)
+                            .attr("refY", 0)
+                            .attr("markerWidth", 6)
+                            .attr("markerHeight", 6)
+                            .attr("orient", "auto")
+                            .attr("class", klazz+"rect")
+                            .append("path")
+                            .attr("d", "M10,-5L0,0L10,5");
+                        var halfX = (o(1) - o(0)) / 2;
+                        var halfY = (y(1) - y(0)) / 2;
+                        var quarterY = (y(1) - y(0)) / 4;
+                        var r = radiusFromSagitta(quarterY, (o(I) - o(iMirror))/2);
+                        console.log("R: " + r);
+                        var a = angleFromSagitta(quarterY, r);
+                        console.log("A: " + a);
+                        console.log("from: " + I + " " + iMirror);
+                        var points = 50;
+                        var angle = d3.scale.linear()
+                            .domain([0,points-1])
+                            .range([Math.PI - (a/2), Math.PI + (a/2)]);
 
+                        var line = d3.svg.line.radial()
+                            .interpolate("basis")
+                            .tension(0)
+                            .radius(r)
+                            .angle(function(d, i) { return angle(i); });
+
+                        svg.append("path")
+                            .datum(d3.range(points))
+                            .attr("class", klazz + "line")
+                            .attr("d", line)
+                            .attr("marker-start", "url(#carryarrowhead)")
+                            .attr("transform", function() {
+                                return "translate(" + (o(I)+o(iMirror))/2 + "," + (y(1)+halfY+quarterY-r) + ")";
+                            });
+
+                        return $timeout(function() {
+                            svg.selectAll("path." + klazz + "line").remove();
+                            svg.selectAll("rect." + klazz + "rect").remove();
+                        }, 500);
                     }
 
-
                     svg.selectAll("*").remove();
-                    manacher.longestPalindrome(newString, iUpdateCB, tUpdateCB, pUpdateCB, rUpdateCB, cUpdateCB, arcUpdateCB, rpUpdateCB);
+                    manacher.longestPalindrome(newString,
+                        tickUpdateCBFactory("i", 2),
+                        tUpdateCB, pUpdateCB,
+                        tickUpdateCBFactory("r", 4),
+                        tickUpdateCBFactory("c", 3),
+                        arcUpdateCB, rpUpdateCB);
                 };
 
                 scope.$watch(attrs.binding, function (newVals, oldVals) {

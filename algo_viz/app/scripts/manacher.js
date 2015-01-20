@@ -23,9 +23,9 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', function ($ti
         return ret;
     }
 
-    function timeoutFactory(f, interval, oldVal, newVal, klazz) {
+    function timeoutFactory(f, interval, a, b, c, d) {
         return $timeout(function() {
-            f(oldVal, newVal, klazz);
+            f(a,b,c,d);
         }, interval);
     }
 
@@ -59,7 +59,7 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', function ($ti
 
             if (R > i) {
                 P[i] = Math.min(R - i, P[i_mirror]);
-                rpUpdateCB(i_mirror, i, (R - i), P[i_mirror]);
+                timeoutFactory(rpUpdateCB, delay+=timestep, i_mirror, i, (R - i), P[i_mirror]);
             } else {
                 //something
             }
