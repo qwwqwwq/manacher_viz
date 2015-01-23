@@ -3,7 +3,7 @@
  */
 
 angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', function ($timeout, $log) {
-    var timestep = 500;
+    var timestep = 500, nextTimeStep;
     var delay = 0;
     var promises = [];
     /** Transform S varo T.
@@ -60,8 +60,13 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', funct
 
             if (R > i) {
                 P[i] = Math.min(R - i, P[i_mirror]);
+                if (P[i_mirror] > R - i) {
+                    nextTimeStep = timestep * 2;
+                } else {
+                    nextTimeStep = timestep;
+                }
                 promises.push(
-                    timeoutFactory(rpUpdateCB, delay+=timestep,
+                    timeoutFactory(rpUpdateCB, delay+=nextTimeStep,
                         Number(i_mirror), Number(i), (R - i), P.slice(0)[i_mirror])
                     );
             } else {

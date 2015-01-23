@@ -168,7 +168,6 @@ angular.module('d3Directives').directive(
 
                     function tickUpdateCBFactory(klazz, row) {
                         return function (oldPos, newPos) {
-                            /*
                             svg.selectAll("path." + klazz).remove();
 
                             svg.append("path")
@@ -183,6 +182,7 @@ angular.module('d3Directives').directive(
                                 })
                                 .duration(timestep);
 
+                            /*
                             svg.selectAll("text." + klazz).remove();
                             svg.selectAll("text." + klazz)
                                 .data([klazz+"=", String(newPos)])
@@ -199,7 +199,7 @@ angular.module('d3Directives').directive(
                                 .text(function (d) {
                                     return String(d);
                                 });
-                            */
+                             */
                         };
                     }
 
@@ -358,8 +358,9 @@ angular.module('d3Directives').directive(
                     manacher.longestPalindrome(newString,
                         tickUpdateCBFactory("i", irow),
                         tUpdateCB, pUpdateCB,
-                        tickUpdateCBFactory("r", rrow),
-                        tickUpdateCBFactory("c", crow),
+                        // tickUpdateCBFactory("r", rrow),
+                        // tickUpdateCBFactory("c", crow),
+                        function() {}, function() {},
                         arcUpdateCB, rpUpdateCB);
                 };
 
