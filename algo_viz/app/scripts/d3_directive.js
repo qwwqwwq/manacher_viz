@@ -105,7 +105,6 @@ angular.module('d3Directives').directive(
                                 }
                             }
                         }
-                        console.log(diffs);
                         o = d3.scale.ordinal()
                             .domain(d3.range(newP.length))
                             .rangeBands(getMainExtent());
@@ -202,7 +201,13 @@ angular.module('d3Directives').directive(
                         };
                     }
 
-                    function bracket (start, end, depth) {
+                    function bracket (startCol, endCol, row, depth) {
+
+                        var mid = (y(row) + y(row + 1)) / 2;
+
+                        var start = [o(startCol) - (o.rangeBand()/2), mid];
+                        var end = [o(endCol) + (o.rangeBand()/2), mid];
+
                         //The data for our line
                         var lineData = [ { "x": start[0],   "y": start[1]},  { "x": start[0],  "y": start[1]+depth},
                                          { "x": end[0],  "y": end[1]+depth}, { "x": end[0],  "y": end[1]}];
@@ -224,7 +229,11 @@ angular.module('d3Directives').directive(
                             viewBox = "0 -5 10 10";
                             path = "M10,-5L0,0L10,5";
                         }
-                        svg.append("defs").append("marker")
+                        var defs = svg.select("defs");
+                        if (defs.empty()) {
+                            defs = svg.append("defs");
+                        }
+                        defs.append("svg:marker")
                             .attr("id", id)
                             .attr("viewBox", viewBox)
                             .attr("refX", 0)
@@ -232,23 +241,25 @@ angular.module('d3Directives').directive(
                             .attr("markerWidth", 6)
                             .attr("markerHeight", 6)
                             .attr("orient", "auto")
+                            .append("svg:path")
                             .attr("class", klazz)
-                            .append("path")
                             .attr("d", path);
                     }
 
-                    function arrowLine (start, end, klazz, leftArrow, rightArrow) {
+                    function arrowLine (start, end, row, lineKlazz, arrowKlazz, leftArrow, rightArrow) {
                         var points = 50;
+                        // sagitta of arc
+                        var sagitta = y.rangeBand()/4;
                         if (leftArrow) {
-                            arrowMarker("leftarrow", klazz, true);
+                            arrowMarker("leftarrow", arrowKlazz, true);
                             $timeout(function() {svg.selectAll("#leftarrow").remove(); }, timestep);
                         }
                         if (rightArrow) {
-                            arrowMarker("rightarrow", klazz, true);
+                            arrowMarker("rightarrow", arrowKlazz, false);
                             $timeout(function() {svg.selectAll("#rightarrow").remove(); }, timestep);
                         }
-                        var r = radiusFromSagitta(quarterY, (o(end) - o(start))/2);
-                        var a = angleFromSagitta(quarterY, r);
+                        var r = radiusFromSagitta(sagitta, (o(end) - o(start))/2);
+                        var a = angleFromSagitta(sagitta, r);
 
                         var angle = d3.scale.linear()
                             .domain([0,points-1])
@@ -260,72 +271,43 @@ angular.module('d3Directives').directive(
                             .radius(r)
                             .angle(function(d, i) { return angle(i); });
 
-                        svg.selectAll("path." + klazz).remove();
+                        svg.selectAll("path." + lineKlazz).remove();
                         var radial = svg.append("path")
                             .datum(d3.range(points))
-                            .attr("class", klazz + "line")
+                            .attr("class", lineKlazz)
                             .attr("d", line);
 
                         if (leftArrow) {
-                            radial = radial.attr("marker-end", "url(#arrowheadrev)");
+                            radial = radial.attr("marker-end", "url(#leftarrow)");
                         }
 
                         if (rightArrow) {
-                            radial = radial attr("marker-start", "url(#arrowheadrev)");
-                        };
+                            radial = radial.attr("marker-start", "url(#rightarrow)");
+                        }
 
                         radial.attr("transform", function() {
-                                return "translate(" + (o(end)+o(start))/2 + "," + (y(0)+halfY+quarterY-r) + ")";
+                                return translate((o(end)+o(start))/2, (y(row) - r) + y.rangeBand() * 0.75);
                             });
 
-
-
+                        return $timeout(function() { svg.selectAll("path." + lineKlazz).remove(); }, timestep);
                     }
 
                     function arcUpdateCB(start, end, klazz) {
-
-                        var halfX = (o(1) - o(0)) / 2;
-                        var halfY = (y(1) - y(0)) / 2;
-                        var quarterY = (y(1) - y(0)) / 4;
-                        var r = radiusFromSagitta(quarterY, (o(end) - o(start))/2);
-                        var a = angleFromSagitta(quarterY, r);
-                        var points = 50;
-                        var angle = d3.scale.linear()
-                            .domain([0,points-1])
-                            .range([Math.PI - (a/2), Math.PI + (a/2)]);
-
-                        var line = d3.svg.line.radial()
-                            .interpolate("basis")
-                            .tension(0)
-                            .radius(r)
-                            .angle(function(d, i) { return angle(i); });
-
-                        svg.selectAll("path." + klazz).remove();
-                        svg.append("path")
-                            .datum(d3.range(points))
-                            .attr("class", klazz + "line")
-                            .attr("d", line)
-                            .attr("marker-end", "url(#arrowhead)")
-                            .attr("marker-start", "url(#arrowheadrev)")
-                            .attr("transform", function() {
-                                return "translate(" + (o(end)+o(start))/2 + "," + (y(0)+halfY+quarterY-r) + ")";
-                            });
+                        arrowLine(start, end, trow, klazz, klazz + "arrow", true, true);
 
                         svg.selectAll("rect." + klazz).remove();
                         svg.selectAll("rect." + klazz)
                             .data([start,end])
                             .enter()
                             .append("rect")
-                            .attr("class", klazz + "rect")
-                            .attr("x", function(d) { return o(d) - halfX; })
-                            .attr("y", y(0) - halfY)
-                            .attr("width", halfX*2)
-                            .attr("height", halfY*2);
+                            .attr("class", klazz)
+                            .attr("x", function(d) { return o(d) - (o.rangeBand()/2); })
+                            .attr("y", y(0) - (y.rangeBand() / 2))
+                            .attr("width", o.rangeBand())
+                            .attr("height", y.rangeBand());
+
                         if (klazz === "match") {
-                            var mid = (y(0) + y(1)) / 2;
-                            var b = bracket([o(start) - halfX, mid],
-                                [(o(end) + halfX), mid],
-                                10);
+                            var b = bracket(start, end, trow, 10);
                             svg.selectAll("path.bracket").remove();
                             svg.append("path")
                                 .attr("d", b)
@@ -333,66 +315,49 @@ angular.module('d3Directives').directive(
                         }
 
                         return $timeout(function() {
-                            svg.selectAll("path." + klazz + "line").remove();
-                            svg.selectAll("rect." + klazz + "rect").remove();
-                        }, 500);
+                            svg.selectAll("rect." + klazz).remove();
+                        }, timestep);
                     }
 
                     function rpUpdateCB (iMirror, I, rMinusI, pIMirror) {
                         var klazz = "carry";
-                        svg.selectAll("#carryarrowhead").remove();
-                        // define the arrowhead shape for later use
-                        svg.append("defs").append("marker")
-                            .attr("id", "carryarrowhead")
-                            .attr("viewBox", "-10 -5 10 10")
-                            .attr("refX", 0)
-                            .attr("refY", 0)
-                            .attr("markerWidth", 6)
-                            .attr("markerHeight", 6)
-                            .attr("orient", "auto")
-                            .attr("class", klazz+"rect")
-                            .append("path")
-                            .attr("d", "M10,-5L0,0L10,5");
-                        var halfX = (o(1) - o(0)) / 2;
-                        var halfY = (y(1) - y(0)) / 2;
-                        var quarterY = (y(1) - y(0)) / 4;
-                        var r = radiusFromSagitta(quarterY, (o(I) - o(iMirror))/2);
-                        console.log("R: " + r);
-                        var a = angleFromSagitta(quarterY, r);
-                        console.log("A: " + a);
-                        console.log("from: " + I + " " + iMirror);
-                        var points = 50;
-                        var angle = d3.scale.linear()
-                            .domain([0,points-1])
-                            .range([Math.PI - (a/2), Math.PI + (a/2)]);
+                        console.log("rpUpdateCB (" + iMirror + "," + I + "," + rMinusI + "," + pIMirror + ")");
 
-                        var line = d3.svg.line.radial()
-                            .interpolate("basis")
-                            .tension(0)
-                            .radius(r)
-                            .angle(function(d, i) { return angle(i); });
+                        var start, end;
+                        if (pIMirror > rMinusI) {
+                            start = pIMirror;
+                            end = rMinusI;
+                        } else if (rMinusI >= pIMirror) {
+                            start = pIMirror;
+                            end = pIMirror;
+                        }
 
-                        svg.append("path")
-                            .datum(d3.range(points))
-                            .attr("class", klazz + "line")
-                            .attr("d", line)
-                            .attr("marker-start", "url(#carryarrowhead)")
-                            .attr("transform", function() {
-                                return "translate(" + (o(I)+o(iMirror))/2 + "," + (y(1)+halfY+quarterY-r) + ")";
-                            });
+                        var b = svg.append("path")
+                            .attr("d", bracket(iMirror - pIMirror, iMirror + pIMirror, prow, 10))
+                            .attr("class", "bluebracket")
+                            .transition()
+                            .duration(timestep)
+                            .attr("d", bracket(I - start,
+                                I + start, prow, 10))
+                            .transition()
+                            .duration(timestep)
+                            .attr("d", bracket(I - end,
+                                I + end, prow, 10));
+
+
+                        arrowLine(iMirror, I, prow, klazz, klazz + "arrow", false, true);
 
                         return $timeout(function() {
-                            svg.selectAll("path." + klazz + "line").remove();
-                            svg.selectAll("rect." + klazz + "rect").remove();
-                        }, 500);
+                            svg.selectAll("path.bluebracket").remove();
+                        }, timestep*2);
                     }
 
                     svg.selectAll("*").remove();
                     manacher.longestPalindrome(newString,
-                        tickUpdateCBFactory("i", 2),
+                        tickUpdateCBFactory("i", irow),
                         tUpdateCB, pUpdateCB,
-                        tickUpdateCBFactory("r", 4),
-                        tickUpdateCBFactory("c", 3),
+                        tickUpdateCBFactory("r", rrow),
+                        tickUpdateCBFactory("c", crow),
                         arcUpdateCB, rpUpdateCB);
                 };
 

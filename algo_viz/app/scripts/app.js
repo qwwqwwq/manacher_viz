@@ -14,7 +14,7 @@ var App = angular.module('App', ['d3Directives', 'ngRoute'])
 
 App.controller('ManacherController', ['$scope',
     function($scope) {
-        $scope.string = 'hello';
+        $scope.string = 'babcbabcbaccba';
     }
 ]);
 

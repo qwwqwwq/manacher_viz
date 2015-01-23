@@ -2,7 +2,7 @@
  * Created by jeffreyquinn on 1/14/15.
  */
 
-angular.module('manacher').factory('manacherFactory', ['$timeout', function ($timeout) {
+angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', function ($timeout, $log) {
     var timestep = 500;
     var delay = 0;
     var promises = [];
@@ -51,7 +51,8 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', function ($ti
         var i;
         for (i = 1; i < n - 1; i++) {
             promises.push(
-                timeoutFactory(iUpdateCB, delay+=timestep, i-1, i)
+                timeoutFactory(iUpdateCB, delay+=timestep,
+                    Number(i - 1), Number(i))
                 );
             var i_mirror = 2 * C - i; // equals to i' = C - (i-C)
 
@@ -59,7 +60,10 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', function ($ti
 
             if (R > i) {
                 P[i] = Math.min(R - i, P[i_mirror]);
-                timeoutFactory(rpUpdateCB, delay+=timestep, i_mirror, i, (R - i), P[i_mirror]);
+                promises.push(
+                    timeoutFactory(rpUpdateCB, delay+=timestep,
+                        Number(i_mirror), Number(i), (R - i), P.slice(0)[i_mirror])
+                    );
             } else {
                 //something
             }
