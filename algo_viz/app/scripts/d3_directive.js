@@ -16,7 +16,7 @@ angular.module('d3Directives').directive(
             scope: true,
             link: function (scope, element, attrs) {
                 var width = 1100,
-                    height = 450,
+                    height = 300,
                     mainMargin = 50,
                     triangleArea = 1000,
                     sidePanelWidth = 300,
@@ -39,7 +39,7 @@ angular.module('d3Directives').directive(
                 }
 
                 function getMainExtent() {
-                    return [mainMargin, width - (mainMargin + sidePanelWidth)];
+                    return [mainMargin, width - mainMargin];
                 }
 
                 function getSidePanelExtent() {
@@ -66,7 +66,7 @@ angular.module('d3Directives').directive(
                         .rangeBands(getSidePanelExtent());
 
                     y = d3.scale.ordinal()
-                        .domain(d3.range(5))
+                        .domain(d3.range(3))
                         .rangeBands(getVerticalExtent());
 
 
@@ -168,6 +168,7 @@ angular.module('d3Directives').directive(
 
                     function tickUpdateCBFactory(klazz, row) {
                         return function (oldPos, newPos) {
+                            /*
                             svg.selectAll("path." + klazz).remove();
 
                             svg.append("path")
@@ -198,6 +199,7 @@ angular.module('d3Directives').directive(
                                 .text(function (d) {
                                     return String(d);
                                 });
+                            */
                         };
                     }
 
