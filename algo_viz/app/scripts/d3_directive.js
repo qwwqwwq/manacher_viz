@@ -249,7 +249,10 @@ angular.module('d3Directives').directive(
                             .attr("d", path);
                     }
 
-                    function arrowLine (start, end, row, lineKlazz, arrowKlazz, leftArrow, rightArrow) {
+                    function arrowLine (start, end, row, lineKlazz, arrowKlazz, leftArrow, rightArrow, ts) {
+                        if (ts === undefined) {
+                            ts = timestep;
+                        }
                         var points = 50;
                         // sagitta of arc
                         var sagitta = y.rangeBand()/4;
@@ -330,6 +333,10 @@ angular.module('d3Directives').directive(
                     }
 
                     function endUpdateCB (start, end, newT) {
+                        console.log([start, end]);
+                        o = d3.scale.ordinal()
+                            .domain(d3.range(newT.length))
+                            .rangeBands(getMainExtent());
                         var b = bracket(start, end, trow, 10);
                         if (initialBracket === undefined) {
                             initialBracket = bracket(0, 0, trow, 10);
@@ -394,7 +401,7 @@ angular.module('d3Directives').directive(
                                 I + end, prow, 10));
 
 
-                        arrowLine(iMirror, I, prow, klazz, klazz + "arrow", false, true);
+                        arrowLine(iMirror, I, prow, klazz, klazz + "arrow", false, true, timestep*2);
 
                         return $timeout(function() {
                             svg.selectAll("path.bluebracket").remove();

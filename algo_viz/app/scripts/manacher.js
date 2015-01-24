@@ -112,9 +112,10 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', funct
                 centerIndex = i;
             }
         }
+        var palinStart =  (centerIndex - 1 - maxLen) / 2;
 
         promises.push(
-            timeoutFactory(endUpdateCB, delay+=timestep, (centerIndex - 1 - maxLen) / 2, maxLen, T)
+            timeoutFactory(endUpdateCB, delay+=timestep, palinStart, palinStart + maxLen - 1, s)
         );
         return s.substr((centerIndex - 1 - maxLen) / 2, maxLen);
     }};
