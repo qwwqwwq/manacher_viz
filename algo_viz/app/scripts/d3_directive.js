@@ -27,7 +27,8 @@ angular.module('d3Directives').directive(
                     prow = 1,
                     irow = 2,
                     crow = 3,
-                    rrow = 4;
+                    rrow = 4,
+                    initialBracket;
 
                 function initalizeSvg() {
                     d3.select("svg").remove();
@@ -310,15 +311,61 @@ angular.module('d3Directives').directive(
 
                         if (klazz === "match") {
                             var b = bracket(start, end, trow, 10);
+                            if (initialBracket === undefined) {
+                                initialBracket = bracket(0, 0, trow, 10);
+                            }
                             svg.selectAll("path.bracket").remove();
                             svg.append("path")
-                                .attr("d", b)
-                                .attr("class", "bracket");
+                                .attr("d", initialBracket)
+                                .attr("class", "bracket")
+                                .transition()
+                                .duration(timestep)
+                                .attr("d", b);
+                            initialBracket = b;
                         }
 
                         return $timeout(function() {
                             svg.selectAll("rect." + klazz).remove();
                         }, timestep);
+                    }
+
+                    function endUpdateCB (start, end, newT) {
+                        var b = bracket(start, end, trow, 10);
+                        if (initialBracket === undefined) {
+                            initialBracket = bracket(0, 0, trow, 10);
+                        }
+                        svg.selectAll("path.bracket").remove();
+                        svg.append("path")
+                            .attr("d", initialBracket)
+                            .attr("class", "bracket")
+                            .transition()
+                            .duration(timestep)
+                            .attr("d", b);
+                        initialBracket = b;
+
+                        svg.selectAll("text.t").remove();
+                        svg.selectAll("text.t")
+                            .data(newT.split(""))
+                            .enter()
+                            .append("text")
+                            .attr("class",
+                            function(d, i) {
+                                if( i >= start && i <= end) {
+                                    return "main t hilight";
+                                } else {
+                                    return "main t";
+                                }
+                            })
+                            .attr("x", function (d, i) {
+                                return o(i);
+                            })
+                            .attr("y", function (d, i) {
+                                return y(trow);
+                            })
+                            .attr("dy", ".35em")
+                            .text(function (d) {
+                                return d;
+                            });
                     }
 
                     function rpUpdateCB (iMirror, I, rMinusI, pIMirror) {
@@ -358,10 +405,7 @@ angular.module('d3Directives').directive(
                     manacher.longestPalindrome(newString,
                         tickUpdateCBFactory("i", irow),
                         tUpdateCB, pUpdateCB,
-                        // tickUpdateCBFactory("r", rrow),
-                        // tickUpdateCBFactory("c", crow),
-                        function() {}, function() {},
-                        arcUpdateCB, rpUpdateCB);
+                        arcUpdateCB, rpUpdateCB, endUpdateCB);
                 };
 
                 scope.$watch(attrs.binding, function (newVals, oldVals) {

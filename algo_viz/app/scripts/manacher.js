@@ -30,7 +30,7 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', funct
     }
 
     var mod = {"longestPalindrome":
-    function(s, iUpdateCB, tUpdateCB, pUpdateCB, rUpdateCB, cUpdateCB, arcUpdateCB, rpUpdateCB) {
+    function(s, iUpdateCB, tUpdateCB, pUpdateCB, arcUpdateCB, rpUpdateCB, endUpdateCB) {
         var oldC, oldR, oldP;
         delay = 0;
         promises.forEach($timeout.cancel);
@@ -66,15 +66,16 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', funct
                     nextTimeStep = timestep;
                 }
                 promises.push(
-                    timeoutFactory(rpUpdateCB, delay+=nextTimeStep,
+                    timeoutFactory(rpUpdateCB, delay+=timestep,
                         Number(i_mirror), Number(i), (R - i), P.slice(0)[i_mirror])
                     );
             } else {
                 //something
+                nextTimeStep = timestep;
             }
 
             promises.push(
-                timeoutFactory(pUpdateCB, delay+=timestep, oldP.slice(0), P.slice(0))
+                timeoutFactory(pUpdateCB, delay+=nextTimeStep, oldP.slice(0), P.slice(0))
             );
 
             // Attempt to expand palindrome centered at i
@@ -97,14 +98,8 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', funct
             if (i + P[i] > R) {
                 oldC = C;
                 C = i;
-                promises.push(
-                    timeoutFactory(cUpdateCB, delay+=timestep, oldC, C)
-                );
                 oldR = R;
                 R = i + P[i];
-                promises.push(
-                    timeoutFactory(rUpdateCB, delay+=timestep, oldR, R)
-                );
             }
         }
 
@@ -118,6 +113,9 @@ angular.module('manacher').factory('manacherFactory', ['$timeout', '$log', funct
             }
         }
 
+        promises.push(
+            timeoutFactory(endUpdateCB, delay+=timestep, (centerIndex - 1 - maxLen) / 2, maxLen, T)
+        );
         return s.substr((centerIndex - 1 - maxLen) / 2, maxLen);
     }};
 
