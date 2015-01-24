@@ -14,7 +14,13 @@ var App = angular.module('App', ['d3Directives', 'ngRoute'])
 
 App.controller('ManacherController', ['$scope',
     function($scope) {
-        $scope.string = 'babcbabcbaccba';
+        var initial = 'babcbabcbaccba';
+        $scope.string = initial;
+        $scope.textInput = initial;
+        $scope.setString = function() {
+            console.log($scope.textInput);
+            $scope.string = $scope.textInput;
+        }
     }
 ]);
 

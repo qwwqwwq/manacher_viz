@@ -48,7 +48,7 @@ angular.module('d3Directives').directive(
                 }
 
                 function getVerticalExtent() {
-                    return [mainMargin, height - mainMargin];
+                    return [mainMargin, height];
                 }
 
                 scope.render = function (svg, newString, oldString) {
