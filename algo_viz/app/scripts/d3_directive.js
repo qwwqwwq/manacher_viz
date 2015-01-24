@@ -17,7 +17,7 @@ angular.module('d3Directives').directive(
             link: function (scope, element, attrs) {
                 var width = 1100,
                     height = 300,
-                    mainMargin = 50,
+                    mainMargin = 30,
                     triangleArea = 1000,
                     sidePanelWidth = 300,
                     sidePanelMargin = 30,
@@ -40,7 +40,7 @@ angular.module('d3Directives').directive(
                 }
 
                 function getMainExtent() {
-                    return [mainMargin, width - mainMargin];
+                    return [0, width];
                 }
 
                 function getSidePanelExtent() {
@@ -60,11 +60,7 @@ angular.module('d3Directives').directive(
 
                     o = d3.scale.ordinal()
                         .domain(d3.range(newStringChars.length))
-                        .rangeBands(getMainExtent());
-
-                    sidePanelX = d3.scale.ordinal()
-                        .domain(d3.range(3))
-                        .rangeBands(getSidePanelExtent());
+                        .rangeBands(getMainExtent(), 0, 1);
 
                     y = d3.scale.ordinal()
                         .domain(d3.range(3))
@@ -74,7 +70,7 @@ angular.module('d3Directives').directive(
                     function tUpdateCB(oldT, newT) {
                         o = d3.scale.ordinal()
                             .domain(d3.range(newT.length))
-                            .rangeBands(getMainExtent());
+                            .rangeBands(getMainExtent(), 0, 1);
 
                         svg.selectAll("text.t").remove();
 
@@ -108,7 +104,7 @@ angular.module('d3Directives').directive(
                         }
                         o = d3.scale.ordinal()
                             .domain(d3.range(newP.length))
-                            .rangeBands(getMainExtent());
+                            .rangeBands(getMainExtent(), 0, 1);
                         svg.selectAll("text.p").remove();
 
                         svg.selectAll("text.p")
@@ -336,7 +332,7 @@ angular.module('d3Directives').directive(
                         console.log([start, end]);
                         o = d3.scale.ordinal()
                             .domain(d3.range(newT.length))
-                            .rangeBands(getMainExtent());
+                            .rangeBands(getMainExtent(), 0, 1);
                         var b = bracket(start, end, trow, 10);
                         if (initialBracket === undefined) {
                             initialBracket = bracket(0, 0, trow, 10);

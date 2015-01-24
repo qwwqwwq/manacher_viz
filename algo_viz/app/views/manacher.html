@@ -10,10 +10,15 @@
             <form>
                 <div class="form-group">
                     <label for="inputString">Input String</label>
-                    <input ng-model="string"
-                           class="form-control"
-                           id="inputString"
-                           placeholder="Enter input string" />
+                    <div class="input-group">
+                        <input ng-model="string"
+                               class="form-control"
+                               id="inputString"
+                               placeholder="Enter input string" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button">Render</button>
+                        </span>
+                    </div>
                 </div>
             </form>
         </div>
